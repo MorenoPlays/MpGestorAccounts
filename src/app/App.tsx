@@ -147,7 +147,7 @@ export default function App() {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
-      currency: 'BRL'
+      currency: 'AOA'
     }).format(value);
   };
 
