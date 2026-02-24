@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, ReactNode, useEffect, useState } from 'react';
 
 interface Timer {
   id: string;
@@ -59,7 +59,7 @@ export const TimerProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         clearInterval(interval);
       });
     };
-  }, []);
+  }, [timers]);
 
   const createTimer = (name: string, initialTime: number) => {
     const newTimer: Timer = {
