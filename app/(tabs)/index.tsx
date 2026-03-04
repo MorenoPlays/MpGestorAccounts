@@ -36,6 +36,7 @@ export default function HomeScreen() {
   const [pessoa, setPessoa] = useState('');
   const [saldoInicial, setSaldoInicial] = useState('');
   const [expandedContaId, setExpandedContaId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleAddConta = () => {
     if (!pessoa.trim()) {
@@ -81,6 +82,11 @@ export default function HomeScreen() {
       minute: '2-digit'
     }).format(date);
   };
+
+  // Filtrar contas baseado na pesquisa
+  const filteredContas = contas.filter(conta =>
+    conta.pessoa.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const renderAccountCard = ({ item: conta }: { item: Conta }) => {
     const saldo = calcularSaldo(conta);
@@ -225,13 +231,32 @@ export default function HomeScreen() {
         </View>
       </View>
 
+      {/* Barra de Pesquisa */}
+      <View style={[styles.searchContainer, { backgroundColor: '#f9fafb' }]}>
+        <View style={[styles.searchBar, { backgroundColor: '#fff', borderColor: '#e5e7eb' }]}>
+          <Ionicons name="search" size={20} color={colors.tabIconDefault} style={styles.searchIcon} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Pesquisar conta..."
+            placeholderTextColor={colors.tabIconDefault}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={20} color={colors.tabIconDefault} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
       {/* Lista de Contas */}
       <ScrollView
         style={styles.listContainer}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       >
-        {contas.length === 0 ? (
+        {filteredContas.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="alert-circle" size={64} color={colors.tabIconDefault} />
             <Text style={[styles.emptyTitle, { color: colors.text }]}>
@@ -243,7 +268,7 @@ export default function HomeScreen() {
           </View>
         ) : (
           <FlatList
-            data={contas}
+            data={filteredContas}
             keyExtractor={(item) => item.id}
             renderItem={renderAccountCard}
             scrollEnabled={false}
@@ -369,6 +394,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    gap: 8,
+  },
+  searchIcon: {
+    flexShrink: 0,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    fontSize: 14,
   },
   listContainer: {
     flex: 1,

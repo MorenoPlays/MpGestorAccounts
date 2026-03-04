@@ -1,4 +1,5 @@
-import React, { createContext, useState, ReactNode } from 'react';
+import { deleteConta as deleteContaFromDB, deleteMovimentacao as deleteMovimentacaoFromDB, getAllContas, initializeDatabase, insertConta, insertMovimentacao } from '@/services/database';
+import React, { createContext, ReactNode, useEffect, useState } from 'react';
 import { Conta, Movimentacao } from '../types';
 
 interface AccountContextType {
@@ -16,8 +17,19 @@ interface AccountContextType {
 export const AccountContext = createContext<AccountContextType | undefined>(undefined);
 
 export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [contas, setContas] = useState<Conta[]>([
-  ]);
+  const [contas, setContas] = useState<Conta[]>([]);
+  const [dbReady, setDbReady] = useState(false);
+
+  // Inicializar banco de dados e carregar contas ao montar
+  useEffect(() => {
+    const init = async () => {
+      await initializeDatabase();
+      const savedContas = await getAllContas();
+      setContas(savedContas);
+      setDbReady(true);
+    };
+    init();
+  }, []);
 
   const addConta = (pessoa: string, saldoInicial: number) => {
     if (!pessoa.trim()) return;
@@ -31,10 +43,18 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
 
     setContas([novaConta, ...contas]);
+    // Persistir no banco de dados
+    if (dbReady) {
+      insertConta(novaConta);
+    }
   };
 
   const deleteConta = (id: string) => {
     setContas(contas.filter(c => c.id !== id));
+    // Persistir no banco de dados
+    if (dbReady) {
+      deleteContaFromDB(id);
+    }
   };
 
   const addMovimentacao = (contaId: string, motivo: string, valor: number, tipo: 'adicionar' | 'descontar') => {
@@ -57,6 +77,11 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
       return c;
     }));
+    
+    // Persistir no banco de dados
+    if (dbReady) {
+      insertMovimentacao(contaId, novaMovimentacao);
+    }
   };
 
   const deleteMovimentacao = (contaId: string, movId: string) => {
@@ -69,6 +94,11 @@ export const AccountProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
       return c;
     }));
+    
+    // Persistir no banco de dados
+    if (dbReady) {
+      deleteMovimentacaoFromDB(movId);
+    }
   };
 
   const calcularSaldo = (conta: Conta): number => {
